@@ -3,6 +3,7 @@ package com.sparta.msa_exam.product.products;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,29 +21,40 @@ public class ProductController {
 
     private final ProductService productService;
 
-
     @PostMapping
-    public ProductResponseDto createProduct(@RequestBody ProductRequestDto productRequestDto,
-                                            @RequestHeader(value = "X-User-Id", required = true) String userId,
-                                            @RequestHeader(value = "X-Role", required = true) String role) {
+    public ResponseEntity<ProductResponseDto> createProduct(@RequestBody ProductRequestDto productRequestDto,
+        @RequestHeader(value = "X-User-Id", required = true) String userId,
+        @RequestHeader(value = "X-Role", required = true) String role) {
         if (!"MANAGER".equals(role)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. User role is not MANAGER.");
         }
-        return productService.createProduct(productRequestDto, userId);
+        ProductResponseDto productResponse = productService.createProduct(productRequestDto, userId);
+        return ResponseEntity.ok()
+            .header("Server-Port", String.valueOf(System.getProperty("server.port", "Unknown Port")))
+            .body(productResponse);
     }
 
     @GetMapping
-    public List<ProductResponseDto> getProducts(ProductSearchDto searchDto) {
-        return productService.getProducts(searchDto);
+    public ResponseEntity<List<ProductResponseDto>> getProducts(ProductSearchDto searchDto) {
+        List<ProductResponseDto> productList = productService.getProducts(searchDto);
+        return ResponseEntity.ok()
+            .header("Server-Port", String.valueOf(System.getProperty("server.port", "Unknown Port")))
+            .body(productList);
     }
 
     @GetMapping("/{productId}")
-    public ProductResponseDto getProductById(@PathVariable Long productId) {
-        return productService.getProductById(productId);
+    public ResponseEntity<ProductResponseDto> getProductById(@PathVariable Long productId) {
+        ProductResponseDto productResponse = productService.getProductById(productId);
+        return ResponseEntity.ok()
+            .header("Server-Port", String.valueOf(System.getProperty("server.port", "Unknown Port")))
+            .body(productResponse);
     }
 
     @GetMapping("/{id}/reduceQuantity")
-    public void reduceProductQuantity(@PathVariable Long id, @RequestParam int quantity) {
+    public ResponseEntity<Void> reduceProductQuantity(@PathVariable Long id, @RequestParam int quantity) {
         productService.reduceProductQuantity(id, quantity);
+        return ResponseEntity.ok()
+            .header("Server-Port", String.valueOf(System.getProperty("server.port", "Unknown Port")))
+            .build();
     }
 }
