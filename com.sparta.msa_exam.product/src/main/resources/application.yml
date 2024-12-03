@@ -1,0 +1,89 @@
+spring:
+  application:
+    name: product-service
+  cloud:
+    loadbalancer:
+      random:
+        enabled: false  # Random 방식 비활성화
+    ribbon:
+      product-service:
+        # 서버 리스트를 설정하고 각 서버에 가중치를 부여
+        listOfServers: "localhost:19093,localhost:19094"
+        ServerList:
+          # 서버와 가중치 설정 (70%, 30% 비율로 요청 분배)
+          - localhost:19093:7  # 70% 요청이 전달되도록 7배 가중치
+          - localhost:19094:3  # 30% 요청이 전달되도록 3배 가중치
+        # 가중치를 랜덤하게 분배
+        Rule:
+          className: com.netflix.loadbalancer.RandomWeightedRule  # 랜덤 가중치 분배
+        MaxAutoRetries: 1
+        MaxAutoRetriesNextServer: 1
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      username: default
+      password: systempass
+      cache:
+        time-to-live: 60000 # 캐시 TTL 설정 (60초)
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    defer-datasource-initialization: true
+    show-sql: true
+
+  sql:
+    init:
+      mode: always
+
+server:
+  port: 19093
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
+
+management:
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"
+  tracing:
+    sampling:
+      probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+---
+
+# dev 프로필 설정
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:test;
+    driver-class-name: org.h2.Driver
+    username: user
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+---
+
+# prod 프로필 설정
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:h2:mem:test;
+    driver-class-name: org.h2.Driver
+    username: user
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
